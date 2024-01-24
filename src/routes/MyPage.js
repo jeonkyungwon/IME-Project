@@ -70,7 +70,7 @@ function MyPage() {
   }, []);
 
   const handlePostRequest = () => {
-    const postURL = `http://54.180.70.111:8083/api/v2/users/${userId}/membership`;
+    const postURL = `api/v2/users/${userId}/membership`;
     axios
       .post(postURL, {
         headers: {
@@ -223,7 +223,7 @@ function MyPage() {
                 openModal();
 
                 // 기존 GET 요청
-                const getURL = `http://54.180.70.111:8083/api/v2/users/${userId}/membership`;
+                const getURL = `api/v2/users/${userId}/membership`;
                 axios
                   .get(getURL, {
                     headers: {

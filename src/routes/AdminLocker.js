@@ -8,6 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import TimePicker from "react-time-picker";
 import axios from "axios";
+axios.defaults.baseURL = process.env.REACT_APP_BASE_URL;
 
 function MyPage() {
   const [isCreateVisible, setCreateVisible] = useState(false);
@@ -64,7 +65,7 @@ function MyPage() {
       const parsedUserObj = JSON.parse(storedUserObj);
       setUserId(parsedUserObj.userId);
       axios
-        .get(`http://54.180.70.111:8083/api/v2/users/${parsedUserObj.userId}`, {
+        .get(`api/v2/users/${parsedUserObj.userId}`, {
           headers: {
             accessToken: parsedUserObj.accessToken,
           },
