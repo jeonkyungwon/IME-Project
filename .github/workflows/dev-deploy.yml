@@ -43,7 +43,7 @@ jobs:
 
       - name: Docker build & push
         run: |
-          docker build -f Dockerfile.dev -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PROJECT_NAME }} .
+          docker build -f Dockerfile.dev -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }} .
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PROJECT_NAME }}
 
       - name: Pull and restart Docker Container
