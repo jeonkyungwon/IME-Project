@@ -19,7 +19,7 @@ jobs:
       - name: make .env
         run: |
           touch ./.env # application.yml 생성
-          echo "${{ secrets.ENV }}" > ./application.yml # github actions에서 설정한 값을 application.yml 파일에 쓰기
+          echo "${{ secrets.ENV_DEV }}" > ./application.yml # github actions에서 설정한 값을 application.yml 파일에 쓰기
 
       - name: Cache node modules
         uses: actions/cache@v2.1.8
