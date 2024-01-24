@@ -44,13 +44,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./Dockerfile.dev
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jmdb
+      - name: Docker build & push
+        run: |
+          docker build -f Dockerfile.dev -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PROJECT_NAME }} .
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PROJECT_NAME }}
 
       - name: Pull and restart Docker Container
         uses: appleboy/ssh-action@master
@@ -59,6 +56,6 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/jmdb
-            docker stop jmdb
-            docker run -d --rm --name jmdb -p 8081:8081 ${{ secrets.DOCKERHUB_USERNAME }}/jmdb
+            sudo docker rm -f ime-front-dev
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
+            docker run -d -p 8081:8081 --name ime-front-dev ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
