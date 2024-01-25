@@ -55,4 +55,4 @@ jobs:
           script: |
             sudo docker rm -f ime-front-dev
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
-            docker run -d -p 8081:8081 --name ime-front-dev ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
+            docker run -d -p 80:80 --name ime-front-dev ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}
