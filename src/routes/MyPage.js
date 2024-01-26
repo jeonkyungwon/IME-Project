@@ -16,6 +16,10 @@ function MyPage() {
   const [userTier, setUserTier] = useState("");
   const [role, setRole] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [accountNum, setAccountNum] = useState("");
+  const [bank, setBank] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [majorId, setMajorId] = useState("");
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -27,11 +31,12 @@ function MyPage() {
 
   useEffect(() => {
     const storedUserObj = localStorage.getItem("userObj");
-
     if (storedUserObj) {
       const parsedUserObj = JSON.parse(storedUserObj);
       setUserId(parsedUserObj.userId);
       setRole(parsedUserObj.role);
+      setMajorId(parsedUserObj.majorId);
+      console.log(parsedUserObj.majorId);
       axios
         .get(`api/v2/users/${parsedUserObj.userId}`, {
           headers: {
@@ -50,12 +55,40 @@ function MyPage() {
             setReservedLockerNum(data.result.reservedLockerNum);
             setTime(data.time);
             setUserTier(data.result.userTier);
-            console.log(
-              "UserName from Axios GET request:",
-              data.result.userName,
-              data.time,
-              data.result.userTier
+            console.log("UserName from Axios GET request:");
+          } else {
+            console.error(
+              "Invalid data structure in Axios GET response:",
+              data
             );
+          }
+        })
+        .catch((error) => {
+          console.error("Error during Axios GET request:", error);
+        });
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedUserObj = localStorage.getItem("userObj");
+    if (storedUserObj) {
+      const parsedUserObj = JSON.parse(storedUserObj);
+      setMajorId(parsedUserObj.majorId);
+      console.log(parsedUserObj.majorId);
+      axios
+        .get(`/api/v2/majors/${parsedUserObj.majorId}/accounts`, {
+          headers: {
+            accessToken: parsedUserObj.accessToken,
+          },
+        })
+        .then((response) => {
+          console.log("Axios response:", response);
+          const data = response.data;
+          if (data.result.accountNum) {
+            setAccountNum(data.result.accountNum);
+            setBank(data.result.bank);
+            setOwnerName(data.result.ownerName);
+            console.log("UserName from Axios GET request:");
           } else {
             console.error(
               "Invalid data structure in Axios GET response:",
@@ -84,6 +117,7 @@ function MyPage() {
         console.error("POST 요청 실패:", err);
       });
   };
+
   return (
     <MyPageStyled>
       <Sidebar role={role} />
@@ -165,51 +199,75 @@ function MyPage() {
           <InfoBox>
             <InfoText>
               사물함 정보
-              <div
-                style={{
-                  marginTop: "35px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  flexDirection: "column",
-                }}
-              >
-                <Info>
-                  위치
-                  <div
+              {reservedLockerNum !== null && reservedLockerName !== null ? (
+                <div
+                  style={{
+                    marginTop: "35px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    flexDirection: "column",
+                  }}
+                >
+                  <Info>
+                    위치
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "left",
+                        width: "295px",
+                      }}
+                    >
+                      <h2>{reservedLockerName}</h2>
+                    </div>
+                  </Info>
+                  <Info>
+                    번호
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "left",
+                        width: "295px",
+                      }}
+                    >
+                      <h2>{reservedLockerNum}</h2>
+                    </div>
+                  </Info>
+                  <Info>
+                    사용기간
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "left",
+                        width: "295px",
+                      }}
+                    >
+                      <h2>{time}</h2>
+                    </div>
+                  </Info>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    marginTop: "35px",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <h2
                     style={{
-                      display: "flex",
-                      justifyContent: "left",
-                      width: "295px",
+                      color: "var(--grayscale-300, #A3AED0)",
+                      fontFamily: "Pretendard",
+                      fontSize: "18px",
+                      fontStyle: "normal",
+                      fontWeight: "700",
+                      lineHeight: "normal",
                     }}
                   >
-                    <h2>센터 b107 사물함{reservedLockerName}</h2>
-                  </div>
-                </Info>
-                <Info>
-                  번호
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "left",
-                      width: "295px",
-                    }}
-                  >
-                    <h2>55{reservedLockerNum}</h2>
-                  </div>
-                </Info>
-                <Info>
-                  사용기간
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "left",
-                      width: "295px",
-                    }}
-                  >
-                    <h2>{time}</h2>
-                  </div>
-                </Info>
-              </div>
+                    예약된 사물함 정보가 없습니다.
+                  </h2>
+                </div>
+              )}
             </InfoText>
           </InfoBox>
         </DivStyled>
@@ -252,9 +310,8 @@ function MyPage() {
             </InfoButton>
             <div style={{ marginBottom: "20%", marginLeft: "8%" }}>
               <h1>카카오뱅크 3333-11-1788841 (조예린)</h1>
-              <p>
-                학생회비를 납부하셨다면 ‘납부 확인 요청'을 눌러주세요. <br />
-                요청 건에 대하여 확인 후 승인됩니다.
+              <p style={{ marginBottom: "70px" }}>
+                등록된 학생회 계좌가 없습니다. 학생회에 문의해주세요.
               </p>
             </div>
           </InfoBoxWithButton>

@@ -35,21 +35,6 @@ function MyPage() {
     setCreateVisible(false); // 입력이 완료되면 입력 창을 닫음
   };
 
-  const handleDeleteBox = () => {
-    // TODO: 사물함 삭제 로직 추가
-    console.log("사물함 삭제 버튼 클릭");
-  };
-
-  const handleResetBox = () => {
-    // TODO: 사물함 초기화 로직 추가
-    console.log("사물함 초기화 버튼 클릭");
-  };
-
-  const handleSaveBox = () => {
-    // TODO: 사물함 저장 로직 추가
-    console.log("사물함 저장 버튼 클릭");
-  };
-
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     setSelectedImage(file);
@@ -208,6 +193,56 @@ function MyPage() {
     </TableContainer>
   );
 
+  const [isResetModalVisible, setResetModalVisible] = useState(false);
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false); // 새로운 state 변수 추가
+  const [isSaveModalVisible, setSaveModalVisible] = useState(false);
+
+  const handleResetModalOpen = () => {
+    setResetModalVisible(true);
+  };
+
+  const handleResetModalCancel = () => {
+    setResetModalVisible(false);
+  };
+
+  const handleResetModalConfirm = () => {
+    // TODO: 초기화 로직 추가
+    console.log("사물함 초기화 확인");
+    setResetModalVisible(false);
+  };
+
+  const handleDeleteBox = () => {
+    // TODO: 사물함 삭제 로직 추가
+    console.log("사물함 삭제 버튼 클릭");
+    setDeleteModalVisible(true); // 삭제하기 버튼 클릭 시 모달 표시
+  };
+
+  const handleDeleteModalCancel = () => {
+    setDeleteModalVisible(false);
+  };
+
+  const handleDeleteModalConfirm = () => {
+    // TODO: 삭제 로직 추가
+    console.log("사물함 삭제 확인");
+    setDeleteModalVisible(false);
+  };
+
+  const handleSaveBox = () => {
+    // TODO: 사물함 저장 로직 추가
+    console.log("사물함 저장 버튼 클릭");
+    setSaveModalVisible(true);
+  };
+
+  const handleSaveModalCancel = () => {
+    setSaveModalVisible(false);
+  };
+
+  const handleSaveModalConfirm = () => {
+    // TODO: 저장 확인 로직 추가
+    console.log("사물함 저장 확인");
+    setSaveModalVisible(false);
+  };
+
   return (
     <MyPageStyled>
       <Sidebar />
@@ -233,8 +268,26 @@ function MyPage() {
                   <ButtonStyled onClick={handleDeleteBox}>
                     삭제하기
                   </ButtonStyled>
-                  <ButtonStyled onClick={handleResetBox}>초기화</ButtonStyled>
+                  <ButtonStyled onClick={handleResetModalOpen}>
+                    초기화
+                  </ButtonStyled>
                   <ButtonStyled onClick={handleSaveBox}>저장하기</ButtonStyled>
+
+                  <ResetModal
+                    visible={isResetModalVisible}
+                    onCancel={handleResetModalCancel}
+                    onConfirm={handleResetModalConfirm}
+                  />
+                  <DeleteModal
+                    visible={isDeleteModalVisible}
+                    onCancel={handleDeleteModalCancel}
+                    onConfirm={handleDeleteModalConfirm}
+                  />
+                  <SaveModal
+                    visible={isSaveModalVisible}
+                    onCancel={handleSaveModalCancel}
+                    onConfirm={handleSaveModalConfirm}
+                  />
                 </ButtonContainer>
               </div>
               <div
@@ -376,7 +429,57 @@ function MyPage() {
     </MyPageStyled>
   );
 }
+const DeleteModal = ({ visible, onCancel, onConfirm }) => {
+  return (
+    visible && (
+      <ModalContainer>
+        <ModalContent>
+          <div style={{ marginTop: "10%" }}>사물함을 삭제하시겠어요?</div>
+          <p>해당 사물함은 복구할 수 없습니다.</p>
+          <ModalButtons>
+            <CancelButton onClick={onCancel}>취소</CancelButton>
+            <ConfirmButton onClick={onConfirm}>삭제</ConfirmButton>
+          </ModalButtons>
+        </ModalContent>
+      </ModalContainer>
+    )
+  );
+};
 
+const ResetModal = ({ visible, onCancel, onConfirm }) => {
+  return (
+    visible && (
+      <ModalContainer>
+        <ModalContent>
+          <div style={{ marginTop: "10%" }}>
+            사물함 정보를 초기화 하시겠어요?
+          </div>
+          <p>해당 사물함의 등록된 정보가 모두 초기화됩니다.</p>
+          <ModalButtons>
+            <CancelButton onClick={onCancel}>취소</CancelButton>
+            <ConfirmButton onClick={onConfirm}>초기화</ConfirmButton>
+          </ModalButtons>
+        </ModalContent>
+      </ModalContainer>
+    )
+  );
+};
+const SaveModal = ({ visible, onCancel, onConfirm }) => {
+  return (
+    visible && (
+      <ModalContainer>
+        <ModalContent>
+          <div style={{ marginTop: "10%" }}>사물함 정보를 저장하시겠어요?</div>
+          <p>변경된 정보가 적용됩니다.</p>
+          <ModalButtons>
+            <CancelButton onClick={onCancel}>취소</CancelButton>
+            <ConfirmButton onClick={onConfirm}>저장</ConfirmButton>
+          </ModalButtons>
+        </ModalContent>
+      </ModalContainer>
+    )
+  );
+};
 export default MyPage;
 
 const MyPageStyled = styled.div`
@@ -553,7 +656,8 @@ const DateAndTimePickerContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-
+  position: relative; // 상대적 위치 지정
+  z-index: 100; // 모달보다 위에 표시되도록 설정
   label {
     margin-bottom: 10px;
     color: var(--grayscale-600, #2b3674);
@@ -631,4 +735,91 @@ const Table = styled.table`
     font-weight: 700;
     line-height: normal;
   }
+`;
+
+const ModalContainer = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  z-index: 1000; // 모달이 다른 요소 위에 나타나도록 설정
+`;
+
+const ModalContent = styled.div`
+  padding: 20px;
+  text-align: center;
+  width: 520px;
+  height: 264px;
+  flex-shrink: 0;
+  border-radius: 40px;
+  background: #fff;
+  z-index: 1001; // 모달 내용도 모달보다 위에 나타나도록 설정
+
+  p {
+    color: var(--grayscale-300, #a3aed0);
+    text-align: center;
+    font-family: Pretendard;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    letter-spacing: -0.32px;
+  }
+`;
+
+const ModalButtons = styled.div`
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 5%;
+`;
+
+const CancelButton = styled.button`
+  display: flex;
+  width: 190px;
+  height: 60px;
+  padding: 10px 8px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  border-radius: 20px;
+  background: var(--background, #f4f7fe);
+  border: none;
+  color: var(--grayscale-600, #2b3674);
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: -0.32px;
+`;
+
+const ConfirmButton = styled.button`
+  display: flex;
+  width: 190px;
+  height: 60px;
+  padding: 10px 8px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  border-radius: 20px;
+  background: var(--primary-400, #ed335d);
+  border: none;
+  color: #fff;
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: -0.32px;
 `;

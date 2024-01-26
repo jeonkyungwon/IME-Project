@@ -129,7 +129,7 @@ const SiderBar = () => {
             <SectionStyled
               onClick={onClickStudentManagement}
               style={{
-                color: getColorForSection("/admin", pathname),
+                color: getColorForSection("/admin/studentManagement", pathname),
                 marginLeft: "48%",
                 marginBottom: "1%",
                 marginTop: "1%",
@@ -140,7 +140,7 @@ const SiderBar = () => {
             <SectionStyled
               onClick={onClickLockerManagement}
               style={{
-                color: getColorForSection("/locker-management", pathname),
+                color: getColorForSection("/admin/lockerManagement", pathname),
                 marginLeft: "48%",
                 marginBottom: "1%",
               }}
