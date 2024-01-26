@@ -17,6 +17,8 @@ function MyPage() {
   const [reservationStart, setReservationStart] = useState(new Date());
   const [reservationEnd, setReservationEnd] = useState(new Date());
   const [usageEnd, setUsageEnd] = useState(new Date());
+  const [leftLockerInfo, setLeftLocker] = useState("");
+  const [majorId, setMajorId] = useState("");
 
   const handlePlusBtnClick = () => {
     setCreateVisible(true);
@@ -243,13 +245,49 @@ function MyPage() {
     setSaveModalVisible(false);
   };
 
+  useEffect(() => {
+    const storedUserObj = localStorage.getItem("userObj");
+    if (storedUserObj) {
+      const parsedUserObj = JSON.parse(storedUserObj);
+      setMajorId(parsedUserObj.majorId);
+      console.log(parsedUserObj.majorId);
+      axios
+        .get(
+          `/admin/api/v2/majors/${parsedUserObj.majorId}/lockers/left-list`,
+          {
+            headers: {
+              accessToken: parsedUserObj.accessToken,
+            },
+          }
+        )
+        .then((response) => {
+          console.log("Axios response:", response);
+          const data = response.data;
+          console.log(data);
+          if (data.result.leftLockerInfo) {
+            setLeftLocker(data.result.leftLockerInfo);
+            console.log(leftLockerInfo);
+            console.log("UserName from Axios GET request:");
+          } else {
+            console.error(
+              "Invalid data structure in Axios GET response:",
+              data
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error during Axios GET request:", error);
+        });
+    }
+  }, []);
+
   return (
     <MyPageStyled>
       <Sidebar />
       <ContentContainer>
         <PageText>사물함 관리</PageText>
         <DivStyled>
-          {isCreateVisible ? (
+          {leftLockerInfo ? (
             <CreateStyled>
               <div
                 style={{
@@ -656,8 +694,6 @@ const DateAndTimePickerContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  position: relative; // 상대적 위치 지정
-  z-index: 100; // 모달보다 위에 표시되도록 설정
   label {
     margin-bottom: 10px;
     color: var(--grayscale-600, #2b3674);

@@ -36,7 +36,7 @@ function MyPage() {
       setUserId(parsedUserObj.userId);
       setRole(parsedUserObj.role);
       setMajorId(parsedUserObj.majorId);
-      console.log(parsedUserObj.majorId);
+      console.log(role);
       axios
         .get(`api/v2/users/${parsedUserObj.userId}`, {
           headers: {
