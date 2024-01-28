@@ -36,7 +36,6 @@ function MyPage() {
       setUserId(parsedUserObj.userId);
       setRole(parsedUserObj.role);
       setMajorId(parsedUserObj.majorId);
-      console.log(role);
       axios
         .get(`api/v2/users/${parsedUserObj.userId}`, {
           headers: {
@@ -52,9 +51,10 @@ function MyPage() {
             setStudentNum(data.result.studentNum);
             localStorage.setItem("major", data.result.majorDetail);
             setReservedLockerName(data.result.reservedLockerName);
-            setReservedLockerNum(data.result.reservedLockerNum);
+            setReservedLockerNum(data.result.reservedLockerDetailNum);
             setTime(data.time);
             setUserTier(data.result.userTier);
+            console.log(role);
             console.log("UserName from Axios GET request:");
           } else {
             console.error(
@@ -82,6 +82,7 @@ function MyPage() {
           },
         })
         .then((response) => {
+          console.log(response);
           console.log("Axios response:", response);
           const data = response.data;
           if (data.result.accountNum) {
@@ -258,7 +259,7 @@ function MyPage() {
                     style={{
                       color: "var(--grayscale-300, #A3AED0)",
                       fontFamily: "Pretendard",
-                      fontSize: "18px",
+                      fontSize: "16px",
                       fontStyle: "normal",
                       fontWeight: "700",
                       lineHeight: "normal",
@@ -274,46 +275,68 @@ function MyPage() {
         <DivStyled>
           <InfoBoxWithButton>
             <InfoText>학생회비 납부</InfoText>
-            <InfoButton
-              userTier={userTier}
-              disabled={userTier === "MEMBER" || userTier === "APPLICANT"}
-              onClick={() => {
-                openModal();
+            {bank && accountNum && ownerName && (
+              <InfoButton
+                userTier={userTier}
+                disabled={userTier === "MEMBER" || userTier === "APPLICANT"}
+                onClick={() => {
+                  openModal();
 
-                // 기존 GET 요청
-                const getURL = `api/v2/users/${userId}/membership`;
-                axios
-                  .get(getURL, {
-                    headers: {
-                      accessToken: JSON.parse(localStorage.getItem("userObj"))
-                        .accessToken,
-                    },
-                  })
-                  .then((res) => {
-                    console.log("GET 요청 성공:", res);
-                    // GET 요청이 성공했을 때 추가적인 로직을 이곳에 추가
-                  })
-                  .catch((err) => {
-                    console.error("GET 요청 실패:", err);
-                  });
+                  // 기존 GET 요청
+                  const getURL = `api/v2/users/${userId}/membership`;
+                  axios
+                    .get(getURL, {
+                      headers: {
+                        accessToken: JSON.parse(localStorage.getItem("userObj"))
+                          .accessToken,
+                      },
+                    })
+                    .then((res) => {
+                      console.log("GET 요청 성공:", res);
+                      // GET 요청이 성공했을 때 추가적인 로직을 이곳에 추가
+                    })
+                    .catch((err) => {
+                      console.error("GET 요청 실패:", err);
+                    });
 
-                // 새로운 POST 요청
-              }}
-            >
-              {userTier === "NON_MEMBER"
-                ? "납부 확인 요청"
-                : userTier === "MEMBER"
-                ? "납부 완료"
-                : userTier === "APPLICANT"
-                ? "납부 확인중"
-                : ""}
-            </InfoButton>
-            <div style={{ marginBottom: "20%", marginLeft: "8%" }}>
-              <h1>카카오뱅크 3333-11-1788841 (조예린)</h1>
-              <p style={{ marginBottom: "70px" }}>
-                등록된 학생회 계좌가 없습니다. 학생회에 문의해주세요.
-              </p>
-            </div>
+                  // 새로운 POST 요청
+                }}
+              >
+                {userTier === "NON_MEMBER"
+                  ? "납부 확인 요청"
+                  : userTier === "MEMBER"
+                  ? "납부 완료"
+                  : userTier === "APPLICANT"
+                  ? "납부 확인중"
+                  : ""}
+              </InfoButton>
+            )}
+            {bank && accountNum && ownerName ? (
+              <div style={{ marginBottom: "20%", marginLeft: "8%" }}>
+                <h1>
+                  {bank} {accountNum} ({ownerName})
+                </h1>
+                <p style={{ marginBottom: "70px" }}>
+                  학생회비를 납부하셨다면 ‘납부 확인 요청'을 눌러주세요. 요청
+                  건에 대하여 확인 후 승인됩니다.
+                </p>
+              </div>
+            ) : (
+              <div style={{ marginBottom: "30%", marginLeft: "8%" }}>
+                <p
+                  style={{
+                    color: "var(--grayscale-300, #A3AED0)",
+                    fontFamily: "Pretendard",
+                    fontSize: "16px",
+                    fontStyle: "normal",
+                    fontWeight: "700",
+                    lineHeight: "normal",
+                  }}
+                >
+                  등록된 학생회 계좌가 없습니다. 학생회에 문의해주세요.
+                </p>
+              </div>
+            )}
           </InfoBoxWithButton>
           <InfoBox
             style={{ background: "var(--background, #f4f7fe)" }}

@@ -6,6 +6,7 @@ import MyPage from "./routes/MyPage";
 import AdminMypage from "./routes/AdminMypage";
 import Reserve from "./routes/Reserve";
 import AdminLocker from "./routes/AdminLocker";
+import Master from "./routes/MasterDepartment";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/admin/studentManagement" element={<AdminMypage />} />
           <Route path="/admin/lockerManagement" element={<AdminLocker />} />
           <Route path="/reserve" element={<Reserve />} />
+          <Route path="/masterdepartment" element={<Master />} />
         </Routes>
       </Router>
     </div>
