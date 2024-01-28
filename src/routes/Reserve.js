@@ -13,7 +13,7 @@ function Reserve() {
 	const userObj = JSON.parse(localStorage.getItem("userObj"));
 	const lockerURL = `api/v2/users/${userObj.userId}/majors/lockers`;
 
-	const [major, setMajor] = useState(localStorage.getItem("major"));
+	const [major, setMajor] = useState(userObj.majorName);
 	const [lockerInfo, setLockerInfo] = useState();
 	const [lockerName, setLockerName] = useState();
 	const [changeLockerModal, setChangeLockerModal] = useState(false);
@@ -112,7 +112,7 @@ function Reserve() {
 	}, []);
 
 	useEffect(() => {
-		connectSSE();
+		// connectSSE();
 	}, []);
 
 	// 서버 SSE 연결
@@ -153,7 +153,7 @@ function Reserve() {
 
 	const reserveURL = `http://54.180.70.111:8083/api/v2/users/${userObj.userId}/majors/${userObj.majorId}/lockerDetail/`;
 
-	function selectLocker(e) {
+	function selectReserve(e) {
 		if (!reservedLockerId) {
 			console.log("first");
 			reserve(e);
@@ -187,7 +187,7 @@ function Reserve() {
 					});
 					setLockerInfo(copyInfo);
 					setAlertReserveModal(true);
-					setNonetargetModal(true);
+					// setNonetargetModal(true);
 				} else {
 					setPrevReserveModal(true);
 				}
@@ -200,33 +200,35 @@ function Reserve() {
 	// 사물함 변경 시 함수
 	async function changeReserve(e) {
 		const lockerDetailId = e;
-		cancelReserve(reservedLockerId, lockerDetailId);
-	}
+		const changeURL =
+			reserveURL + reservedLockerId + "/reservations/change?newLockerDetailId=" + lockerDetailId;
 
-	// 예약 취소 함수
-	async function cancelReserve(e, id) {
-		const cancelURL = reserveURL + reservedLockerId + "/reservations";
-		fetch(cancelURL, {
+		fetch(changeURL, {
 			method: "PATCH",
 			headers: {
 				accessToken: userObj.accessToken,
 			},
 		})
 			.then((res) => {
+				// 사물함 취소 작업
 				setReservedLockerId(null);
 				let copyInfo = [...lockerInfo];
 				copyInfo.forEach((i) => {
 					i.lockerDetail.forEach((detail) => {
-						if (detail.id === e) {
+						if (detail.id === reservedLockerId) {
 							detail.status = "NON_RESERVED";
+						} else if (detail.id === lockerDetailId) {
+							detail.status = "RESERVED";
 						}
 					});
 				});
+				// 사물함 예약 작업
+				setReservedLockerId(lockerDetailId);
 				setLockerInfo(copyInfo);
-				// reserve(id);
+				setAlertReserveModal(true);
 			})
 			.catch((err) => {
-				console.log(err);
+				console.error(err);
 			});
 	}
 
@@ -382,7 +384,7 @@ function Reserve() {
 																	onClick={() => {
 																		setReserveNum(num);
 																		setReserveId(locker.id);
-																		selectLocker(locker.id);
+																		selectReserve(locker.id);
 																		// changeReserve(locker.id);
 																		// setChangeLockerModal(true);
 																	}}>
