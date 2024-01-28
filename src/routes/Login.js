@@ -20,7 +20,8 @@ function Login() {
 	};
 
 	const forgetPW = () => {
-		alert("비밀번호를 잊어버렸군요! 아쉽게된거죠");
+		const URL = "https://portal.sejong.ac.kr/jsp/inquiry/idconf.jsp";
+		window.open(URL);
 	};
 
 	const login = (e) => {
