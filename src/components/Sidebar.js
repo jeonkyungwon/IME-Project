@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Link, useLocation } from "react-router-dom";
 import { ReactComponent as SejongBucket } from "../assets/SejongBucket.svg";
@@ -7,6 +7,9 @@ import { ReactComponent as Reserve } from "../assets/BucketReserve.svg";
 import { ReactComponent as FeedBack } from "../assets/FeedBack.svg";
 import { ReactComponent as Logout } from "../assets/Logout.svg";
 import { ReactComponent as Admin } from "../assets/Admin.svg";
+import axios from "axios";
+
+axios.defaults.baseURL = process.env.REACT_APP_BASE_URL;
 
 const getColorForSection = (sectionPath, currentPath) => {
   return currentPath.includes(sectionPath)
@@ -15,6 +18,19 @@ const getColorForSection = (sectionPath, currentPath) => {
 };
 
 const SiderBar = () => {
+  const [userId, setUserId] = useState("");
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    const storedUserObj = localStorage.getItem("userObj");
+    if (storedUserObj) {
+      const parsedUserObj = JSON.parse(storedUserObj);
+      setUserId(parsedUserObj.userId);
+      setRole(parsedUserObj.role);
+      console.log(role);
+    }
+  }, []);
+
   const { pathname } = useLocation();
 
   const onClickLentMyHomeBtn = () => {
@@ -26,16 +42,13 @@ const SiderBar = () => {
   };
 
   const onClickFeedBtn = () => {
-    window.location.href = "/feedback";
+    const feedbackUrl = "https://forms.gle/89HQpNBEQ4y7ECP79";
+    window.open(feedbackUrl, "_blank");
   };
 
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/";
-  };
-
-  const onClickAdminBtn = () => {
-    window.location.href = "/admin";
   };
 
   const onClickStudentManagement = () => {
@@ -46,12 +59,8 @@ const SiderBar = () => {
     window.location.href = "/admin/lockerManagement";
   };
 
-  const onClickDepartmentManagement = () => {
-    window.location.href = "/admin/departmentManagement";
-  };
-
   const onClickMaster = () => {
-    window.location.href = "/master";
+    window.location.href = "/masterdepartment";
   };
 
   return (
@@ -110,71 +119,88 @@ const SiderBar = () => {
           로그아웃
         </SectionStyled>
 
-        <SectionStyled
-          active={pathname.includes("/admin")}
-          onClick={onClickStudentManagement}
-          style={{
-            color: getColorForSection("/admin", pathname),
-            marginBottom: "1%",
-          }}
-        >
-          <div>
-            <Admin />
-          </div>
-          어드민
-        </SectionStyled>
-
-        {pathname.includes("/admin") && (
+        {role === "ROLE_ADMIN" && (
           <>
             <SectionStyled
+              active={pathname.includes("/admin")}
               onClick={onClickStudentManagement}
               style={{
                 color: getColorForSection("/admin", pathname),
-                marginLeft: "48%",
-                marginBottom: "1%",
-                marginTop: "1%",
-              }}
-            >
-              학생관리
-            </SectionStyled>
-            <SectionStyled
-              onClick={onClickLockerManagement}
-              style={{
-                color: getColorForSection("/locker-management", pathname),
-                marginLeft: "48%",
                 marginBottom: "1%",
               }}
             >
-              사물함 관리
+              <div>
+                <Admin />
+              </div>
+              어드민
             </SectionStyled>
-            <SectionStyled
-              onClick={onClickDepartmentManagement}
-              style={{
-                color: getColorForSection(
-                  "/admin/department-management",
-                  pathname
-                ),
-                marginLeft: "48%",
-                marginBottom: "1%",
-              }}
-            >
-              학과 관리
-            </SectionStyled>
+
+            {pathname.includes("/admin") && (
+              <>
+                <SectionStyled
+                  onClick={onClickStudentManagement}
+                  style={{
+                    color: getColorForSection(
+                      "/admin/studentManagement",
+                      pathname
+                    ),
+                    marginLeft: "48%",
+                    marginBottom: "1%",
+                    marginTop: "1%",
+                  }}
+                >
+                  학생관리
+                </SectionStyled>
+                <SectionStyled
+                  onClick={onClickLockerManagement}
+                  style={{
+                    color: getColorForSection(
+                      "/admin/lockerManagement",
+                      pathname
+                    ),
+                    marginLeft: "48%",
+                    marginBottom: "1%",
+                  }}
+                >
+                  사물함 관리
+                </SectionStyled>
+              </>
+            )}
           </>
         )}
-        <SectionStyled
-          active={pathname.includes("/master")}
-          onClick={onClickMaster}
-          style={{
-            color: getColorForSection("/master", pathname),
-            marginTop: "5%",
-          }}
-        >
-          <div>
-            <Admin />
-          </div>
-          마스터
-        </SectionStyled>
+        {role === "ROLE_MASTER" && (
+          <>
+            <SectionStyled
+              active={pathname.includes("/masterdepartment")}
+              onClick={onClickMaster}
+              style={{
+                color: getColorForSection("/masterdepartment", pathname),
+                marginTop: "5%",
+              }}
+            >
+              <div>
+                <Admin />
+              </div>
+              마스터
+            </SectionStyled>
+
+            {pathname.includes("/masterdepartment") && (
+              <SectionStyled
+                onClick={onClickMaster}
+                style={{
+                  color: getColorForSection(
+                    "/masterdepartment/department-management",
+                    pathname
+                  ),
+                  marginLeft: "48%",
+                  marginBottom: "1%",
+                }}
+              >
+                학과 관리
+              </SectionStyled>
+            )}
+          </>
+        )}
       </SectionWrap>
     </SiderBarStyled>
   );

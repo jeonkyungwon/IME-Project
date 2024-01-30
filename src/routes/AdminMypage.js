@@ -15,15 +15,15 @@ import downloadCloudGray from "../assets/download-cloud-gray.svg";
 import upArrow from "../assets/up_arrow.svg";
 import downArrow from "../assets/down_arrow.svg";
 import axios from "axios";
-import { getSuggestedQuery } from "@testing-library/react";
-import { faL } from "@fortawesome/free-solid-svg-icons";
+import refreshToken from "../components/refreshToken.js";
+axios.defaults.baseURL = process.env.REACT_APP_BASE_URL;
 
 function AdminMypage() {
 	const userObj = JSON.parse(localStorage.getItem("userObj"));
-	const studentInfoURL = `http://54.180.70.111:8083/admin/api/v2/majors/${userObj.majorId}/users`;
+	const studentInfoURL = `admin/api/v2/majors/${userObj.majorId}/users`;
 	const fileUploadURL = `http://54.180.70.111:8083/admin/api/v2/users/${userObj.userId}/file`;
-	const [page, setPage] = useState(0);
-	const [major, setMajor] = useState(localStorage.getItem("major"));
+	let page = 0;
+	const [major, setMajor] = useState(userObj.majorName);
 	const [studentInfo, setStudentInfo] = useState([]);
 	const [asc, setasc] = useState(true);
 	const [searchId, setSearchId] = useState("");
@@ -40,13 +40,13 @@ function AdminMypage() {
 				},
 			})
 			.then((res) => {
-				console.log(res);
 				setStudentInfo((prevInfo) => [...prevInfo, ...res.data.result.adminResponse]);
-				setPage((prevPage) => prevPage + 1);
+				page = page + 1;
 				setLoading(false);
 			})
 			.catch((err) => {
 				console.log(err);
+				refreshToken();
 			});
 	}
 
@@ -65,9 +65,8 @@ function AdminMypage() {
 					},
 				})
 				.then((res) => {
-					console.log(res);
 					setStudentInfo(res.data.result.adminResponse);
-					setPage((prevPage) => prevPage + 1);
+					page = 0;
 					setLoading(false);
 				})
 				.catch((err) => {
@@ -105,10 +104,8 @@ function AdminMypage() {
 		// 스크롤이 tbody 하단에 위치하고 로딩 중이 아닐 때 추가 데이터 로드
 		if (scrollTop + tbodyHeight >= scrollHeight && !loading) {
 			if (searchId) {
-				console.log("검색 스크롤");
 				searchInfo();
 			} else {
-				console.log("전체 스크롤");
 				getStudentInfo();
 			}
 		}
@@ -116,6 +113,7 @@ function AdminMypage() {
 
 	const uploadFile = async (e) => {
 		const file = e.target.files[0];
+		e.value = "";
 		const formData = new FormData();
 		formData.append("membershipFile", file);
 
@@ -135,7 +133,7 @@ function AdminMypage() {
 	};
 
 	const onChange = (e) => {
-		setPage(0);
+		page = 0;
 		const {
 			target: { name, value },
 		} = e;
@@ -146,18 +144,18 @@ function AdminMypage() {
 		if (e === "id") {
 			const copyInfo = [...studentInfo].sort((a, b) => {
 				if (asc) {
-					return a.studentNum.localeCompare(b.studentNum);
+					return a.userInfo.studentNum.localeCompare(b.userInfo.studentNum);
 				} else {
-					return b.studentNum.localeCompare(a.studentNum);
+					return b.userInfo.studentNum.localeCompare(a.userInfo.tudentNum);
 				}
 			});
 			setStudentInfo(copyInfo);
 		} else if (e === "lockerNum") {
 			const copyInfo = [...studentInfo].sort((a, b) => {
-				if (asc && a.lockerNum) {
-					return a.lockerNum.localeCompare(b.lockerNum);
-				} else if (a.lockerNum) {
-					return b.lockerNum.localeCompare(a.lockerNum);
+				if (asc && a.userInfo.lockerNum) {
+					return a.userInfo.lockerNum.localeCompare(b.userInfo.lockerNum);
+				} else if (a.userInfo.lockerNum) {
+					return b.userInfo.lockerNum.localeCompare(a.userInfo.lockerNum);
 				}
 			});
 			setStudentInfo(copyInfo);
@@ -166,26 +164,23 @@ function AdminMypage() {
 
 	const updateInfo = (e) => {
 		const updateURL = "http://54.180.70.111:8083/admin/api/v2/users";
-		let updateStudentInfo = Object.values(studentInfo).map((item) => ({
+		let modifiedUserInfoList = Object.values(studentInfo).map((item) => ({
 			admin: item.userInfo.role === "ROLE_ADMIN",
-			lockerDetailId: 0,
+			lockerDetailId: null,
 			membership: item.userInfo.userTier !== "NON_MEMBER",
 			studentNum: item.userInfo.studentNum,
 		}));
-		updateStudentInfo = {
-			modifiedUserInfoList: updateStudentInfo,
-		};
-		console.log(updateStudentInfo);
-		let formData = new FormData();
-		formData.append("data", JSON.stringify(updateStudentInfo));
+
+		console.log(modifiedUserInfoList);
 		fetch(updateURL, {
 			method: "PATCH",
 			headers: {
 				accessToken: userObj.accessToken,
+				"Content-Type": "application/json",
 			},
-			data: {
-				updateStudentInfo,
-			},
+			body: JSON.stringify({
+				modifiedUserInfoList: modifiedUserInfoList,
+			}),
 		})
 			.then((res) => {
 				console.log(res);
@@ -203,7 +198,13 @@ function AdminMypage() {
 					style={{
 						marginLeft: "2.5rem",
 					}}>
-					<p className="title">마이페이지</p>
+					<p
+						className="title"
+						onClick={() => {
+							console.log(studentInfo);
+						}}>
+						마이페이지
+					</p>
 					<div className="infoDiv">
 						<p
 							style={{
@@ -284,89 +285,100 @@ function AdminMypage() {
 						</div>
 						<table className="infoTable">
 							{/* 목록 */}
-							<thead>
-								<tr>
-									<th>이름</th>
-									<th
-										onClick={() => {
-											setasc(!asc);
-											handleAsc("id");
-										}}>
-										<span>학번</span>
-										<img src={asc ? downArrow : upArrow} alt="arrow" />
-									</th>
-									<th
-										onClick={() => {
-											setasc(!asc);
-											handleAsc("lockerNum");
-										}}>
-										<span>사물함 번호</span>
-										<img src={asc ? downArrow : upArrow} alt="arrow" />
-									</th>
-									<th>
-										<span>상태</span>
-									</th>
-									<th>
-										<span>학생회비 납부</span>
-									</th>
-									<th>
-										<span>관리자 여부</span>
-									</th>
-								</tr>
-							</thead>
+							<div>
+								<thead>
+									<tr>
+										<th>이름</th>
+										<th
+											onClick={() => {
+												setasc(!asc);
+												handleAsc("id");
+											}}>
+											<span>학번</span>
+											<img src={asc ? downArrow : upArrow} alt="arrow" />
+										</th>
+										<th
+											onClick={() => {
+												setasc(!asc);
+												handleAsc("lockerNum");
+											}}>
+											<span>사물함 번호</span>
+											<img src={asc ? downArrow : upArrow} alt="arrow" />
+										</th>
+										<th>
+											<span>상태</span>
+										</th>
+										<th>
+											<span>학생회비 납부</span>
+										</th>
+										<th>
+											<span>관리자 여부</span>
+										</th>
+									</tr>
+								</thead>
+							</div>
 							{/* 내용 */}
-							<tbody id="user-info-div">
-								{studentInfo ? (
-									studentInfo.map(function (info, i) {
-										return (
-											<tr
-												style={{
-													borderBottom: "1px solid var(--background, #F4F7FE)",
-												}}
-												key={i}>
-												<td>{info.userInfo.studentName}</td>
-												<td>{info.userInfo.studentNum}</td>
-												<td>{info.reservationInfo.lockerNum}</td>
-												<td>{info.userInfo.status}</td>
-												<td>
-													<input
-														type="checkbox"
-														id={`pay${i}`}
-														defaultChecked={info.userInfo.userTier === "MEMBER"}
-														onClick={() => {
-															let copyInfo = [...studentInfo];
-															copyInfo[i].userInfo.userTier =
-																copyInfo[i].userInfo.userTier === "MEMBER"
-																	? "NON_MEMBER"
-																	: "MEMBER";
-															setStudentInfo(copyInfo);
-														}}
-													/>
-													<label htmlFor={`pay${i}`}></label>
-												</td>
-												<td>
-													<input
-														type="checkbox"
-														id={`admin${i}`}
-														defaultChecked={info.userInfo.role === "ROLE_ADMIN" ? true : false}
-														onClick={() => {
-															let copyInfo = [...studentInfo];
-															copyInfo[i].userInfo.role =
-																copyInfo[i].userInfo.role === "ROLE_ADMIN"
-																	? "ROLE_USER"
-																	: "ROLE_ADMIN";
-															setStudentInfo(copyInfo);
-														}}
-													/>
-													<label htmlFor={`admin${i}`}></label>
-												</td>
-											</tr>
-										);
-									})
-								) : (
-									<></>
-								)}
-							</tbody>
+							<div
+								id="user-info-div"
+								style={{
+									overflow: "auto",
+									maxHeight: "36.8rem",
+									width: "100%",
+								}}>
+								<tbody>
+									{studentInfo ? (
+										studentInfo.map(function (info, i) {
+											return (
+												<tr
+													style={{
+														borderBottom: "1px solid var(--background, #F4F7FE)",
+													}}
+													key={i}>
+													<td>{info.userInfo.studentName}</td>
+													<td>{info.userInfo.studentNum}</td>
+													<td>{info.reservationInfo.lockerNum}</td>
+													<td>{info.userInfo.status}</td>
+													<td>
+														<input
+															type="checkbox"
+															id={`pay${i}`}
+															checked={info.userInfo.userTier === "MEMBER"}
+															onClick={() => {
+																let copyInfo = [...studentInfo];
+																copyInfo[i].userInfo.userTier =
+																	copyInfo[i].userInfo.userTier === "MEMBER"
+																		? "NON_MEMBER"
+																		: "MEMBER";
+																setStudentInfo(copyInfo);
+															}}
+														/>
+														<label htmlFor={`pay${i}`}></label>
+													</td>
+													<td>
+														<input
+															type="checkbox"
+															id={`admin${i}`}
+															checked={info.userInfo.role === "ROLE_ADMIN"}
+															onClick={() => {
+																let copyInfo = [...studentInfo];
+																copyInfo[i].userInfo.role =
+																	copyInfo[i].userInfo.role === "ROLE_ADMIN"
+																		? "ROLE_USER"
+																		: "ROLE_ADMIN";
+																setStudentInfo(copyInfo);
+																console.log(copyInfo);
+															}}
+														/>
+														<label htmlFor={`admin${i}`}></label>
+													</td>
+												</tr>
+											);
+										})
+									) : (
+										<></>
+									)}
+								</tbody>
+							</div>
 						</table>
 						{studentInfo ? (
 							<></>

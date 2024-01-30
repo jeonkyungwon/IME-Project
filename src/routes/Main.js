@@ -5,6 +5,7 @@ import {
   faListCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+axios.defaults.baseURL = process.env.REACT_APP_BASE_URL;
 
 function Main() {
   const [startTime, setStartTime] = useState("로딩 중...");

@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable react-hooks/exhaustive-deps */
 import Sidebar from "../components/Sidebar";
 import styled from "styled-components";
 import React, { useState, useEffect } from "react";
@@ -7,15 +5,15 @@ import Modal from "react-bootstrap/Modal";
 import "./Reserve.css";
 import alert from "../assets/alert-circle.svg";
 import axios from "axios";
-import { ContentPasteSearchOutlined, NoEncryption } from "@mui/icons-material";
 import refreshToken from "../components/refreshToken.js";
 import { EventSourcePolyfill, NativeEventSource } from "event-source-polyfill";
+axios.defaults.baseURL = process.env.REACT_APP_BASE_URL;
 
 function Reserve() {
 	const userObj = JSON.parse(localStorage.getItem("userObj"));
-	const lockerURL = `http://54.180.70.111:8083/api/v2/users/${userObj.userId}/majors/lockers`;
+	const lockerURL = `api/v2/users/${userObj.userId}/majors/lockers`;
 
-	const [major, setMajor] = useState(localStorage.getItem("major"));
+	const [major, setMajor] = useState(userObj.majorName);
 	const [lockerInfo, setLockerInfo] = useState();
 	const [lockerName, setLockerName] = useState();
 	const [changeLockerModal, setChangeLockerModal] = useState(false);
@@ -49,8 +47,6 @@ function Reserve() {
 	}, []);
 
 	const checkTime = () => {
-		const currentHour = currentTime.getHours();
-		const currentMinute = currentTime.getMinutes();
 		// 정해진 시간 (예: 9시 0분부터 17시 30분까지) 설정
 		const start = new Date(startTime);
 		const end = new Date(endTime);
@@ -73,7 +69,11 @@ function Reserve() {
 				setLockerInfo(res.data.result.lockersInfo);
 				setLockerName(
 					res.data.result.lockersInfo.map((i) => {
-						return { name: i.locker.name, img: i.locker.image, isHovered: false };
+						return {
+							name: i.locker.name,
+							img: i.locker.image,
+							isHovered: false,
+						};
 					})
 				);
 				setReserveName(res.data.result.lockersInfo[0].locker.name);
@@ -89,7 +89,7 @@ function Reserve() {
 	}
 
 	async function getUserInfo() {
-		const URL = `http://54.180.70.111:8083/api/v2/users/${userObj.userId}`;
+		const URL = `api/v2/users/${userObj.userId}`;
 		axios
 			.get(URL, {
 				headers: {
@@ -153,7 +153,7 @@ function Reserve() {
 
 	const reserveURL = `http://54.180.70.111:8083/api/v2/users/${userObj.userId}/majors/${userObj.majorId}/lockerDetail/`;
 
-	function selectLocker(e) {
+	function selectReserve(e) {
 		if (!reservedLockerId) {
 			console.log("first");
 			reserve(e);
@@ -187,7 +187,7 @@ function Reserve() {
 					});
 					setLockerInfo(copyInfo);
 					setAlertReserveModal(true);
-					setNonetargetModal(true);
+					// setNonetargetModal(true);
 				} else {
 					setPrevReserveModal(true);
 				}
@@ -200,33 +200,35 @@ function Reserve() {
 	// 사물함 변경 시 함수
 	async function changeReserve(e) {
 		const lockerDetailId = e;
-		cancelReserve(reservedLockerId, lockerDetailId);
-	}
+		const changeURL =
+			reserveURL + reservedLockerId + "/reservations/change?newLockerDetailId=" + lockerDetailId;
 
-	// 예약 취소 함수
-	async function cancelReserve(e, id) {
-		const cancelURL = reserveURL + reservedLockerId + "/reservations";
-		fetch(cancelURL, {
+		fetch(changeURL, {
 			method: "PATCH",
 			headers: {
 				accessToken: userObj.accessToken,
 			},
 		})
 			.then((res) => {
+				// 사물함 취소 작업
 				setReservedLockerId(null);
 				let copyInfo = [...lockerInfo];
 				copyInfo.forEach((i) => {
 					i.lockerDetail.forEach((detail) => {
-						if (detail.id === e) {
+						if (detail.id === reservedLockerId) {
 							detail.status = "NON_RESERVED";
+						} else if (detail.id === lockerDetailId) {
+							detail.status = "RESERVED";
 						}
 					});
 				});
+				// 사물함 예약 작업
+				setReservedLockerId(lockerDetailId);
 				setLockerInfo(copyInfo);
-				// reserve(id);
+				setAlertReserveModal(true);
 			})
 			.catch((err) => {
-				console.log(err);
+				console.error(err);
 			});
 	}
 
@@ -382,7 +384,7 @@ function Reserve() {
 																	onClick={() => {
 																		setReserveNum(num);
 																		setReserveId(locker.id);
-																		selectLocker(locker.id);
+																		selectReserve(locker.id);
 																		// changeReserve(locker.id);
 																		// setChangeLockerModal(true);
 																	}}>

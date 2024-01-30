@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./Login.css";
 import logoTitle from "../assets/LogoTitle.svg";
 import axios from "axios";
-import { Routes, Route, Link, useNavigate, Outlet } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+axios.defaults.baseURL = process.env.REACT_APP_BASE_URL;
 
 function Login() {
 	let navigate = useNavigate();
 	const [studentId, setStudentId] = useState("");
 	const [password, setPassword] = useState("");
 	const [isCorrect, setIsCorrect] = useState(true);
-	const loginURL = "http://54.180.70.111:8083/api/v2/auth/login";
+	const loginURL = "api/v2/auth/login";
 	const onChange = (e) => {
 		const {
 			target: { name, value },
@@ -19,7 +20,8 @@ function Login() {
 	};
 
 	const forgetPW = () => {
-		alert("비밀번호를 잊어버렸군요! 아쉽게된거죠");
+		const URL = "https://portal.sejong.ac.kr/jsp/inquiry/idconf.jsp";
+		window.open(URL);
 	};
 
 	const login = (e) => {

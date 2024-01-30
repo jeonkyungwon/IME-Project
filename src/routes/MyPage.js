@@ -16,6 +16,10 @@ function MyPage() {
   const [userTier, setUserTier] = useState("");
   const [role, setRole] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [accountNum, setAccountNum] = useState("");
+  const [bank, setBank] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [majorId, setMajorId] = useState("");
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -27,11 +31,11 @@ function MyPage() {
 
   useEffect(() => {
     const storedUserObj = localStorage.getItem("userObj");
-
     if (storedUserObj) {
       const parsedUserObj = JSON.parse(storedUserObj);
       setUserId(parsedUserObj.userId);
       setRole(parsedUserObj.role);
+      setMajorId(parsedUserObj.majorId);
       axios
         .get(`api/v2/users/${parsedUserObj.userId}`, {
           headers: {
@@ -47,15 +51,45 @@ function MyPage() {
             setStudentNum(data.result.studentNum);
             localStorage.setItem("major", data.result.majorDetail);
             setReservedLockerName(data.result.reservedLockerName);
-            setReservedLockerNum(data.result.reservedLockerNum);
+            setReservedLockerNum(data.result.reservedLockerDetailNum);
             setTime(data.time);
             setUserTier(data.result.userTier);
-            console.log(
-              "UserName from Axios GET request:",
-              data.result.userName,
-              data.time,
-              data.result.userTier
+            console.log(role);
+            console.log("UserName from Axios GET request:");
+          } else {
+            console.error(
+              "Invalid data structure in Axios GET response:",
+              data
             );
+          }
+        })
+        .catch((error) => {
+          console.error("Error during Axios GET request:", error);
+        });
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedUserObj = localStorage.getItem("userObj");
+    if (storedUserObj) {
+      const parsedUserObj = JSON.parse(storedUserObj);
+      setMajorId(parsedUserObj.majorId);
+      console.log(parsedUserObj.majorId);
+      axios
+        .get(`/api/v2/majors/${parsedUserObj.majorId}/accounts`, {
+          headers: {
+            accessToken: parsedUserObj.accessToken,
+          },
+        })
+        .then((response) => {
+          console.log(response);
+          console.log("Axios response:", response);
+          const data = response.data;
+          if (data.result.accountNum) {
+            setAccountNum(data.result.accountNum);
+            setBank(data.result.bank);
+            setOwnerName(data.result.ownerName);
+            console.log("UserName from Axios GET request:");
           } else {
             console.error(
               "Invalid data structure in Axios GET response:",
@@ -70,7 +104,7 @@ function MyPage() {
   }, []);
 
   const handlePostRequest = () => {
-    const postURL = `http://54.180.70.111:8083/api/v2/users/${userId}/membership`;
+    const postURL = `api/v2/users/${userId}/membership`;
     axios
       .post(postURL, {
         headers: {
@@ -84,6 +118,7 @@ function MyPage() {
         console.error("POST 요청 실패:", err);
       });
   };
+
   return (
     <MyPageStyled>
       <Sidebar role={role} />
@@ -165,98 +200,143 @@ function MyPage() {
           <InfoBox>
             <InfoText>
               사물함 정보
-              <div
-                style={{
-                  marginTop: "35px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  flexDirection: "column",
-                }}
-              >
-                <Info>
-                  위치
-                  <div
+              {reservedLockerNum !== null && reservedLockerName !== null ? (
+                <div
+                  style={{
+                    marginTop: "35px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    flexDirection: "column",
+                  }}
+                >
+                  <Info>
+                    위치
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "left",
+                        width: "295px",
+                      }}
+                    >
+                      <h2>{reservedLockerName}</h2>
+                    </div>
+                  </Info>
+                  <Info>
+                    번호
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "left",
+                        width: "295px",
+                      }}
+                    >
+                      <h2>{reservedLockerNum}</h2>
+                    </div>
+                  </Info>
+                  <Info>
+                    사용기간
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "left",
+                        width: "295px",
+                      }}
+                    >
+                      <h2>{time}</h2>
+                    </div>
+                  </Info>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    marginTop: "35px",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <h2
                     style={{
-                      display: "flex",
-                      justifyContent: "left",
-                      width: "295px",
+                      color: "var(--grayscale-300, #A3AED0)",
+                      fontFamily: "Pretendard",
+                      fontSize: "16px",
+                      fontStyle: "normal",
+                      fontWeight: "700",
+                      lineHeight: "normal",
                     }}
                   >
-                    <h2>센터 b107 사물함{reservedLockerName}</h2>
-                  </div>
-                </Info>
-                <Info>
-                  번호
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "left",
-                      width: "295px",
-                    }}
-                  >
-                    <h2>55{reservedLockerNum}</h2>
-                  </div>
-                </Info>
-                <Info>
-                  사용기간
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "left",
-                      width: "295px",
-                    }}
-                  >
-                    <h2>{time}</h2>
-                  </div>
-                </Info>
-              </div>
+                    예약된 사물함 정보가 없습니다.
+                  </h2>
+                </div>
+              )}
             </InfoText>
           </InfoBox>
         </DivStyled>
         <DivStyled>
           <InfoBoxWithButton>
             <InfoText>학생회비 납부</InfoText>
-            <InfoButton
-              userTier={userTier}
-              disabled={userTier === "MEMBER" || userTier === "APPLICANT"}
-              onClick={() => {
-                openModal();
+            {bank && accountNum && ownerName && (
+              <InfoButton
+                userTier={userTier}
+                disabled={userTier === "MEMBER" || userTier === "APPLICANT"}
+                onClick={() => {
+                  openModal();
 
-                // 기존 GET 요청
-                const getURL = `http://54.180.70.111:8083/api/v2/users/${userId}/membership`;
-                axios
-                  .get(getURL, {
-                    headers: {
-                      accessToken: JSON.parse(localStorage.getItem("userObj"))
-                        .accessToken,
-                    },
-                  })
-                  .then((res) => {
-                    console.log("GET 요청 성공:", res);
-                    // GET 요청이 성공했을 때 추가적인 로직을 이곳에 추가
-                  })
-                  .catch((err) => {
-                    console.error("GET 요청 실패:", err);
-                  });
+                  // 기존 GET 요청
+                  const getURL = `api/v2/users/${userId}/membership`;
+                  axios
+                    .get(getURL, {
+                      headers: {
+                        accessToken: JSON.parse(localStorage.getItem("userObj"))
+                          .accessToken,
+                      },
+                    })
+                    .then((res) => {
+                      console.log("GET 요청 성공:", res);
+                      // GET 요청이 성공했을 때 추가적인 로직을 이곳에 추가
+                    })
+                    .catch((err) => {
+                      console.error("GET 요청 실패:", err);
+                    });
 
-                // 새로운 POST 요청
-              }}
-            >
-              {userTier === "NON_MEMBER"
-                ? "납부 확인 요청"
-                : userTier === "MEMBER"
-                ? "납부 완료"
-                : userTier === "APPLICANT"
-                ? "납부 확인중"
-                : ""}
-            </InfoButton>
-            <div style={{ marginBottom: "20%", marginLeft: "8%" }}>
-              <h1>카카오뱅크 3333-11-1788841 (조예린)</h1>
-              <p>
-                학생회비를 납부하셨다면 ‘납부 확인 요청'을 눌러주세요. <br />
-                요청 건에 대하여 확인 후 승인됩니다.
-              </p>
-            </div>
+                  // 새로운 POST 요청
+                }}
+              >
+                {userTier === "NON_MEMBER"
+                  ? "납부 확인 요청"
+                  : userTier === "MEMBER"
+                  ? "납부 완료"
+                  : userTier === "APPLICANT"
+                  ? "납부 확인중"
+                  : ""}
+              </InfoButton>
+            )}
+            {bank && accountNum && ownerName ? (
+              <div style={{ marginBottom: "20%", marginLeft: "8%" }}>
+                <h1>
+                  {bank} {accountNum} ({ownerName})
+                </h1>
+                <p style={{ marginBottom: "70px" }}>
+                  학생회비를 납부하셨다면 ‘납부 확인 요청'을 눌러주세요. 요청
+                  건에 대하여 확인 후 승인됩니다.
+                </p>
+              </div>
+            ) : (
+              <div style={{ marginBottom: "30%", marginLeft: "8%" }}>
+                <p
+                  style={{
+                    color: "var(--grayscale-300, #A3AED0)",
+                    fontFamily: "Pretendard",
+                    fontSize: "16px",
+                    fontStyle: "normal",
+                    fontWeight: "700",
+                    lineHeight: "normal",
+                  }}
+                >
+                  등록된 학생회 계좌가 없습니다. 학생회에 문의해주세요.
+                </p>
+              </div>
+            )}
           </InfoBoxWithButton>
           <InfoBox
             style={{ background: "var(--background, #f4f7fe)" }}
