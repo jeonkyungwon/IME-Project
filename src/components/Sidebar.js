@@ -59,10 +59,6 @@ const SiderBar = () => {
     window.location.href = "/admin/lockerManagement";
   };
 
-  const onClickDepartmentManagement = () => {
-    window.location.href = "/admin/departmentManagement";
-  };
-
   const onClickMaster = () => {
     window.location.href = "/masterdepartment";
   };
@@ -190,7 +186,7 @@ const SiderBar = () => {
 
             {pathname.includes("/masterdepartment") && (
               <SectionStyled
-                onClick={onClickDepartmentManagement}
+                onClick={onClickMaster}
                 style={{
                   color: getColorForSection(
                     "/masterdepartment/department-management",

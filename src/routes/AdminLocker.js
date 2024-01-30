@@ -19,6 +19,42 @@ function MyPage() {
   const [usageEnd, setUsageEnd] = useState(new Date());
   const [leftLockerInfo, setLeftLocker] = useState("");
   const [majorId, setMajorId] = useState("");
+  const [leftLockerNames, setLeftLockerNames] = useState([]);
+  const [userId, setUserId] = useState("");
+  const [majorDetail, setMajorDetail] = useState("");
+  const [name, setName] = useState("");
+
+  useEffect(() => {
+    const storedUserObj = localStorage.getItem("userObj");
+    if (storedUserObj) {
+      const parsedUserObj = JSON.parse(storedUserObj);
+      setUserId(parsedUserObj.userId);
+      setMajorId(parsedUserObj.majorId);
+      axios
+        .get(`api/v2/users/${parsedUserObj.userId}/majors/lockers`, {
+          headers: {
+            accessToken: parsedUserObj.accessToken,
+          },
+        })
+        .then((response) => {
+          console.log("Axios response:", response);
+          const data = response.data;
+          console.log(data.result.lockersInfo);
+          if (data.result) {
+            console.log(data.result.locker);
+            console.log("UserName from Axios GET request:");
+          } else {
+            console.error(
+              "Invalid data structure in Axios GET response:",
+              data
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error during Axios GET request:", error);
+        });
+    }
+  }, []);
 
   const handlePlusBtnClick = () => {
     setCreateVisible(true);
@@ -41,9 +77,6 @@ function MyPage() {
     const file = event.target.files[0];
     setSelectedImage(file);
   };
-
-  const [userId, setUserId] = useState("");
-  const [majorDetail, setMajorDetail] = useState("");
 
   useEffect(() => {
     const storedUserObj = localStorage.getItem("userObj");
@@ -250,7 +283,7 @@ function MyPage() {
     if (storedUserObj) {
       const parsedUserObj = JSON.parse(storedUserObj);
       setMajorId(parsedUserObj.majorId);
-      console.log(parsedUserObj.majorId);
+
       axios
         .get(
           `/admin/api/v2/majors/${parsedUserObj.majorId}/lockers/left-list`,
@@ -266,8 +299,13 @@ function MyPage() {
           console.log(data);
           if (data.result.leftLockerInfo) {
             setLeftLocker(data.result.leftLockerInfo);
-            console.log(leftLockerInfo);
-            console.log("UserName from Axios GET request:");
+
+            if (data.result.leftLockerInfo.length > 0) {
+              const lockerNames = data.result.leftLockerInfo.map(
+                (locker) => locker.leftLockerName
+              );
+              setLeftLockerNames(lockerNames);
+            }
           } else {
             console.error(
               "Invalid data structure in Axios GET response:",
@@ -298,8 +336,23 @@ function MyPage() {
                   marginTop: "40px",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  {majorDetail} 사물함
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    width: "50%",
+                  }}
+                >
+                  {leftLockerNames.map((lockerName, index) => (
+                    <div
+                      style={{
+                        marginRight: "3%",
+                      }}
+                      key={index}
+                    >
+                      {lockerName} 사물함({index + 1})
+                    </div>
+                  ))}
                   <SmallPlusBtnStyled onClick={handleCreateBox} />
                 </div>
                 <ButtonContainer>
